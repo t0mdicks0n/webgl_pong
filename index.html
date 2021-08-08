@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="utf-8">
+  <title></title>
+</head>
+<body>
+  <canvas id="canvas" style="border: 1px solid black;"></canvas>
+  <script type="text/javascript">
+    "use strict";
+    let canvas = document.getElementById('canvas');
+    let context = canvas.getContext('2d');
+
+    canvas.width = 600
+    canvas.height = 400
+    // ball
+    let randSpeed = [1, -1];
+    let ballDiag = 20;
+    let ballSpeedX;
+    let ballSpeedY;
+    let ballX;
+    let ballY;
+    setBallPosition();
+    // paddle
+    let paddle1Y = canvas.height / 2;
+    let paddle2Y = canvas.height / 2;
+    let paddleSpeed = 10;
+    let paddleHeight = 50;
+    let paddleWidth = 10;
+    // scores
+    let player1Score = 0;
+    let player2Score = 0;
+
+    // Start the first frame request
+    window.requestAnimationFrame(gameLoop);
+    // Listen to keyboard inputs
+    let executeMoves = keyBoardInput();
+
+    function setBallPosition() {
+      let ballSpeed = 4;
+      ballSpeedX = ballSpeed * randSpeed[Math.floor(Math.random() * 2)];
+      ballSpeedY = ballSpeed * randSpeed[Math.floor(Math.random() * 2)];
+      ballX = canvas.width / 2;
+      ballY = canvas.height / 2;
+    }
+    function gameLoop(timeStamp){
+      update();
+      draw();
+      // Keep requesting new frames
+      window.requestAnimationFrame(gameLoop);
+    }
+
+    function keyBoardInput() {
+      const controller = {
+        87: {pressed: false, func: movePaddleUp1},
+        83: {pressed: false, func: movePaddleDown1},
+        38: {pressed: false, func: movePaddleUp2},
+        40: {pressed: false, func: movePaddleDown2},
+      }
+
+      document.addEventListener("keydown", (e) => {
+        if(controller[e.keyCode]){
+          controller[e.keyCode].pressed = true
+        }
+      });
+
+      document.addEventListener("keyup", (e) => {
+        if(controller[e.keyCode]){
+          controller[e.keyCode].pressed = false
+        }
+      });
+
+      const executeMoves = () => {
+        Object.keys(controller).forEach(key=> {
+          controller[key].pressed && controller[key].func()
+        })
+      }
+
+      function movePaddleUp1() {
+        let y = paddle1Y - paddleSpeed;
+
+        if (y <= 0) {
+          paddle1Y = 0
+        } else {
+          paddle1Y = paddle1Y - paddleSpeed;
+        }
+      }
+
+      function movePaddleDown1() {
+        let y = paddle1Y + paddleSpeed;
+
+        if (y >= canvas.height - paddleHeight) {
+          paddle1Y = canvas.height - paddleHeight;
+        } else {
+          paddle1Y = paddle1Y + paddleSpeed;
+        }
+      }
+
+      function movePaddleUp2() {
+        let y = paddle2Y - paddleSpeed;
+
+        if (y <= 0) {
+          paddle2Y = 0
+        } else {
+          paddle2Y = paddle2Y - paddleSpeed;
+        }
+      }
+
+      function movePaddleDown2() {
+        let y = paddle2Y + paddleSpeed;
+
+        if (y >= canvas.height - paddleHeight) {
+          paddle2Y = canvas.height - paddleHeight;
+        } else {
+          paddle2Y = paddle2Y + paddleSpeed;
+        }
+      }
+
+      return executeMoves;
+    }
+
+    function draw(){
+      // clear the canvas
+      context.clearRect(0, 0, canvas.width, canvas.height);
+
+      // draw ball
+      context.fillStyle = '#ff8080';
+      context.fillRect(ballX, ballY, ballDiag, ballDiag);
+
+      // Draw player 1 paddle
+      context.fillRect(0, paddle1Y, paddleWidth, paddleHeight);
+
+      // Draw player 2 paddle
+      context.fillRect(canvas.width - paddleWidth, paddle2Y, paddleWidth, paddleHeight)
+
+      // Draw player 1 score
+      context.font = "30px Arial";
+      context.fillText(player1Score, canvas.width / 4, 50);
+
+      // Draw player 2 score
+      context.font = "30px Arial";
+      context.fillText(player2Score, canvas.width / 4 * 3, 50);
+
+    }
+
+    function update() {
+
+      ballX = ballX + ballSpeedX;
+      ballY = ballY + ballSpeedY;
+
+      // vert collision
+      if (ballX <= 0) {
+        // if ball touches paddle
+        if ((ballY >= paddle1Y && ballY <= paddle1Y + paddleHeight) ||  (ballY+ballDiag >= paddle1Y && ballY+ballDiag <= paddle1Y + paddleHeight)) {
+          // bounce
+          console.log("bounce")
+          ballSpeedX = ballSpeedX * -1
+        // else score reduction
+        } else {
+          player2Score++;
+          setBallPosition();
+        }
+      }
+
+      if (ballX + ballDiag >= canvas.width) {
+        // if ball touches paddle
+        if ((ballY >= paddle2Y && ballY <= paddle2Y + paddleHeight) ||  (ballY+ballDiag >= paddle2Y && ballY+ballDiag <= paddle2Y + paddleHeight)) {
+          // bounce
+          console.log("bounce")
+          ballSpeedX = ballSpeedX * -1
+        // else score reduction
+        } else {
+          player1Score++;
+          setBallPosition();
+        }
+      }
+
+      // horis collision
+      if (ballY + ballDiag >= canvas.height || ballY <= 0) {
+        ballSpeedY = ballSpeedY * -1
+      }
+
+      executeMoves()
+
+    }
+  </script>
+</body>
+</html>
